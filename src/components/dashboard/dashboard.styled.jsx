@@ -32,6 +32,7 @@ export const BodyBox = styled(Box)(({ theme }) => ({
   padding: "2rem 4rem",
   display: "grid",
   gridTemplateColumns: `repeat(4,1fr)`,
+  // gridTemplateColumns: `repeat(auto-fit,minmax(200px,1fr))`,
   gap: "4rem 4rem",
   [theme.breakpoints.down("lg")]: {
     gridTemplateColumns: `repeat(3,1fr)`,

@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import PlantModal from "../plantModal";
+import axios from "axios";
+
 import {
   Box,
   IconButton,
@@ -48,8 +50,9 @@ const Dashboard = () => {
   const [editModal, seteditModal] = useState(false);
   const [editIndex, seteditIndex] = useState();
   const dispatch = useDispatch();
-
-  const FilteredArray = ImageData.filter((val) =>
+  const [dbData, setDbData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const FilteredArray = ImageData?.filter((val) =>
     val.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -61,6 +64,27 @@ const Dashboard = () => {
   };
   const open = Boolean(anchorEl);
   // console.log(ImageData);
+
+  const getAllData = () => {
+    axios.get("http://localhost:5000/info").then((res) => {
+      console.log("response", res);
+      setDbData(res.data);
+      dispatch(treeActions.storePlant(res.data));
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    getAllData();
+  }, []);
+
+  // test data
+  const getRedirect = () => {
+    axios.get("http://localhost:5000/info/redirect").then((res) => {
+      console.log("res", res);
+    });
+  };
+
   return (
     <Box>
       <HeaderBox>
@@ -84,6 +108,7 @@ const Dashboard = () => {
             <CartIcon />
           </CartBatch>
           <AdminIcon onClick={handleClick} />
+
           <Popover
             id="hello"
             open={open}
@@ -120,11 +145,16 @@ const Dashboard = () => {
               Advanced
             </PopoverList>
           </Popover>
+          <Button onClick={getRedirect} variant="contained">
+            {" "}
+            Redirect
+          </Button>
         </IconBox>
       </HeaderBox>
+      {loading && <Typography>Loading...</Typography>}
       <BodyBox>
         {FilteredArray?.map((data, index) => (
-          <Card key={data.id} sx={{ maxWidth: 345 }}>
+          <Card key={data._id} sx={{ maxWidth: 345 }}>
             <CardActionArea>
               <CardMedia
                 component="img"

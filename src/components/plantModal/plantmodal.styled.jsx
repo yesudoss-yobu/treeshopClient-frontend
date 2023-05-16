@@ -1,6 +1,6 @@
 import { Box, styled, Dialog, Button, TextField } from "@mui/material";
 
-export const ContainerBox = styled(Box)(({}) => ({
+export const ContainerBox = styled(Box)(({theme}) => ({
   display: "flex",
   flexDirection: "column",
   gap: "2rem",

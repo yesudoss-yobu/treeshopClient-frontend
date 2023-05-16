@@ -86,8 +86,9 @@ const PlantModal = ({ open, onClose, EditModal, EditIndex }) => {
         dispatch(
           treeActions.Addplant({
             ...data,
-            id: Math.random(),
+            _id: Math.random(),
             profile: reader.result,
+            // profile: "profile",
           })
         );
       };
@@ -102,8 +103,9 @@ const PlantModal = ({ open, onClose, EditModal, EditIndex }) => {
               index: EditIndex,
               data: {
                 ...data,
-                id: imageData[EditIndex].id,
-                profile: reader.result,
+                _id: imageData[EditIndex]._id,
+                // profile: reader.result,
+                profile: "profile",
               },
             })
           );
@@ -114,7 +116,7 @@ const PlantModal = ({ open, onClose, EditModal, EditIndex }) => {
             index: EditIndex,
             data: {
               ...data,
-              id: imageData[EditIndex].id,
+              _id: imageData[EditIndex]._id,
               profile: editProfile,
             },
           })
