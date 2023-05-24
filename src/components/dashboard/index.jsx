@@ -66,7 +66,7 @@ const Dashboard = () => {
   // console.log(ImageData);
 
   const getAllData = () => {
-    axios.get("http://localhost:5000/info").then((res) => {
+    axios.get("https://treeshop.onrender.com/info").then((res) => {
       console.log("response", res);
       setDbData(res.data);
       dispatch(treeActions.storePlant(res.data));
@@ -77,13 +77,6 @@ const Dashboard = () => {
   useEffect(() => {
     getAllData();
   }, []);
-
-  // test data
-  const getRedirect = () => {
-    axios.get("http://localhost:5000/info/redirect").then((res) => {
-      console.log("res", res);
-    });
-  };
 
   return (
     <Box>
@@ -145,10 +138,6 @@ const Dashboard = () => {
               Advanced
             </PopoverList>
           </Popover>
-          <Button onClick={getRedirect} variant="contained">
-            {" "}
-            Redirect
-          </Button>
         </IconBox>
       </HeaderBox>
       {loading && <Typography>Loading...</Typography>}
