@@ -1,8 +1,7 @@
 import { createSlice, configureStore } from "@reduxjs/toolkit";
 import axios from "axios";
 
-import balsam from "../assets/balsam.jpeg";
-import hibicus from "../assets/hibicus.jpg";
+
 import insulin from "../assets/insulin.jpg";
 import jasmine from "../assets/jasmine.jpg";
 import lavendar from "../assets/lavendar.jpg";
