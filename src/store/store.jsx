@@ -1,15 +1,6 @@
 import { createSlice, configureStore } from "@reduxjs/toolkit";
 import axios from "axios";
 
-
-import insulin from "../assets/insulin.jpg";
-import jasmine from "../assets/jasmine.jpg";
-import lavendar from "../assets/lavendar.jpg";
-import lilly from "../assets/lilly.jpeg";
-import lotus from "../assets/lotus.jpg";
-import marigold from "../assets/marigold.jpg";
-import rose from "../assets/rose.jpg";
-
 const initialState = {
   trees: [],
   cart: [],

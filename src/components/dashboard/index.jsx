@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import PlantModal from "../plantModal";
 import axios from "axios";
+import { useDelete, useTotalGet } from "../../query/query";
+import io from "socket.io-client";
+import { socketIoRequestHandler } from "../../query/query";
 
 import {
   Box,
@@ -40,6 +43,7 @@ import {
   PopoverList,
 } from "./dashboard.styled";
 import { treeActions } from "../../store/store";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Dashboard = () => {
   const ImageData = useSelector((state) => state.tree.trees);
@@ -50,8 +54,10 @@ const Dashboard = () => {
   const [editModal, seteditModal] = useState(false);
   const [editIndex, seteditIndex] = useState();
   const dispatch = useDispatch();
-  const [dbData, setDbData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { mutate: deletePlant } = useDelete(
+    "https://treeshop.onrender.com/info/del"
+  );
+
   const FilteredArray = ImageData?.filter((val) =>
     val.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -65,18 +71,46 @@ const Dashboard = () => {
   const open = Boolean(anchorEl);
   // console.log(ImageData);
 
-  const getAllData = () => {
-    axios.get("https://treeshop.onrender.com/info").then((res) => {
-      console.log("response", res);
-      setDbData(res.data);
-      dispatch(treeActions.storePlant(res.data));
-      setLoading(false);
-    });
+  // const getAllData = () => {
+  //   axios.get("https://treeshop.onrender.com/info").then((res) => {
+  //     console.log("response", res);
+  //     setDbData(res.data);
+  //     dispatch(treeActions.storePlant(res.data));
+  //     setLoading(false);
+  //   });
+  // };
+
+  const {
+    data: plantData,
+    isLoading,
+    isFetching,
+    isStale,
+  } = useTotalGet("http://localhost:5000/info");
+
+  console.log(plantData);
+
+  const socket = io("http://localhost:5000");
+  const queryClient = useQueryClient();
+
+  socket.on("connect", () => {
+    console.log("connected to socket.io server");
+  });
+
+  socket.on("message", (data) => {
+    console.log("ReceivedData", data);
+    queryClient.setQueryData(["totalData"], { data });
+  });
+
+  const requestHandler = () => {
+    
+    socketIoRequestHandler();
   };
 
   useEffect(() => {
-    getAllData();
-  }, []);
+    if (plantData) {
+      dispatch(treeActions.storePlant(plantData.data));
+    }
+  }, [plantData]);
 
   return (
     <Box>
@@ -137,10 +171,16 @@ const Dashboard = () => {
             <PopoverList sx={{ p: 2, cursor: "not-allowed" }}>
               Advanced
             </PopoverList>
+            <PopoverList
+              onClick={requestHandler}
+              sx={{ p: 2, cursor: "pointer" }}
+            >
+              Request
+            </PopoverList>
           </Popover>
         </IconBox>
       </HeaderBox>
-      {loading && <Typography>Loading...</Typography>}
+      {isLoading && <Typography>Loading...</Typography>}
       <BodyBox>
         {FilteredArray?.map((data, index) => (
           <Card key={data._id} sx={{ maxWidth: 345 }}>
@@ -194,7 +234,10 @@ const Dashboard = () => {
                   Edit
                 </Button>
                 <Button
-                  onClick={() => dispatch(treeActions.DeletePlant(index))}
+                  onClick={() => {
+                    const id = ImageData[index]._id;
+                    deletePlant(id);
+                  }}
                   variant="contained"
                   size="small"
                   color="primary"
