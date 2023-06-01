@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { TextField } from "@mui/material";
+import { TextField, Button } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { useEdit, usePost } from "../../query/query";
+import io from "socket.io-client";
+import { useQueryClient } from "@tanstack/react-query";
+
 import {
   ModalContainer,
   ModalButton,
@@ -31,13 +34,14 @@ const PlantModal = ({ open, onClose, EditModal, EditIndex }) => {
   const imageData = useSelector((state) => state.tree.trees);
 
   const [image, setImage] = useState();
-
   const dispatch = useDispatch();
 
   const { mutate: plantMutate } = usePost("https://treeshop.onrender.com/info");
   const { mutate: EditPlant } = useEdit(
     "https://treeshop.onrender.com/info/update"
   );
+
+  const queryClient = useQueryClient();
 
   // const fileResolver = (file, callback) => {
   //   let reader = new FileReader();
@@ -85,70 +89,79 @@ const PlantModal = ({ open, onClose, EditModal, EditIndex }) => {
 
   const onsubmit = (data) => {
     // console.log("testProfile", test);
+    dispatch(treeActions.updateLoader(true));
     var reader = new FileReader();
     if (!EditModal) {
       reader.readAsDataURL(data.profile[0]);
       reader.onload = () => {
-        // dispatch(
-        //   treeActions.Addplant({
-        //     ...data,
-        //     _id: Math.random(),
-        //     profile: reader.result,
-        //     // profile: "profile",
-        //   })
-        // );
-        plantMutate({ ...data, _id: Math.random(), profile: reader.result });
+        plantMutate(
+          { ...data, _id: Math.random(), profile: reader.result },
+          {
+            onSuccess: async () => {
+              await queryClient.invalidateQueries({ queryKey: ["totalData"] });
+              dispatch(treeActions.updateLoader(false));
+            },
+          }
+        );
       };
     } else {
       let editProfile = data.profile;
       if (typeof data.profile !== "string") {
         reader.readAsDataURL(data.profile[0]);
         reader.onload = () => {
-          // editProfile = reader.result;
-          // dispatch(
-          //   treeActions.EditPlant({
-          //     index: EditIndex,
-          //     data: {
-          //       ...data,
-          //       _id: imageData[EditIndex]._id,
-          //       // profile: reader.result,
-          //       profile: "profile",
-          //     },
-          //   })
-          // );
-          EditPlant({
-            ...data,
-            _id: imageData[EditIndex]._id,
-            profile: reader.result,
-          });
+          EditPlant(
+            {
+              ...data,
+              _id: imageData[EditIndex]._id,
+              profile: reader.result,
+            },
+            {
+              onSuccess: async () => {
+                await queryClient.invalidateQueries({
+                  queryKey: ["totalData"],
+                });
+                dispatch(treeActions.updateLoader(false));
+              },
+            }
+          );
         };
       } else {
-        // dispatch(
-        //   treeActions.EditPlant({
-        //     index: EditIndex,
-        //     data: {
-        //       ...data,
-        //       _id: imageData[EditIndex]._id,
-        //       profile: editProfile,
-        //     },
-        //   })
-        // );
-
-        EditPlant({
-          ...data,
-          _id: imageData[EditIndex]._id,
-          profile: editProfile,
-        });
+        EditPlant(
+          {
+            ...data,
+            _id: imageData[EditIndex]._id,
+            profile: editProfile,
+          },
+          {
+            onSuccess: async () => {
+              await queryClient.invalidateQueries({ queryKey: ["totalData"] });
+              dispatch(treeActions.updateLoader(false));
+            },
+          }
+        );
       }
     }
-
-    // console.log(data.profile[0])
-    // console.log({ ...data, id: Math.random(), profile: data.profile[0] });
 
     onClose();
     setImage("");
     reset();
   };
+
+  // const socket = io("http://localhost:5000");
+  // const queryClient = useQueryClient();
+
+  // socket.on("connect", () => {
+  //   console.log("connected to socket.io server");
+  // });
+
+  // socket.on("message", (data) => {
+  //   console.log("ReceivedData", data);
+  //   queryClient.setQueryData(["totalData"], { data });
+  // });
+
+  // const requestHandler = () => {
+  //   socket.emit("requestData");
+  // };
 
   return (
     <ModalContainer

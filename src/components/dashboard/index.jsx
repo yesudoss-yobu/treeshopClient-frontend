@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PlantModal from "../plantModal";
-import axios from "axios";
 import { useDelete, useTotalGet } from "../../query/query";
 import io from "socket.io-client";
-import { socketIoRequestHandler } from "../../query/query";
-
 import {
   Box,
   IconButton,
@@ -26,6 +23,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import treeshoplogo from "../../assets/treeshoplogo.jpg";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import Loader from "../loader";
 
 import {
   HeaderBox,
@@ -44,9 +42,11 @@ import {
 } from "./dashboard.styled";
 import { treeActions } from "../../store/store";
 import { useQueryClient } from "@tanstack/react-query";
+import { red } from "@mui/material/colors";
 
 const Dashboard = () => {
   const ImageData = useSelector((state) => state.tree.trees);
+  const loader = useSelector((state) => state.tree.loader);
   const [anchorEl, setAnchorEl] = useState(null);
   const [search, setSearch] = useState("");
   const [ModalOpen, setModalOpen] = useState(false);
@@ -85,26 +85,27 @@ const Dashboard = () => {
     isLoading,
     isFetching,
     isStale,
-  } = useTotalGet("http://localhost:5000/info");
+    isRefetching,
+    refetch,
+  } = useTotalGet("https://treeshop.onrender.com/info");
 
-  console.log(plantData);
+  // console.log(plantData);
 
-  const socket = io("http://localhost:5000");
-  const queryClient = useQueryClient();
+  // const socket = io("http://localhost:5000");
+  // const queryClient = useQueryClient();
 
-  socket.on("connect", () => {
-    console.log("connected to socket.io server");
-  });
+  // socket.on("connect", () => {
+  //   console.log("connected to socket.io server");
+  // });
 
-  socket.on("message", (data) => {
-    console.log("ReceivedData", data);
-    queryClient.setQueryData(["totalData"], { data });
-  });
+  // socket.on("message", (data) => {
+  //   console.log("ReceivedData", data);
+  //   queryClient.setQueryData(["totalData"], { data });
+  // });
 
-  const requestHandler = () => {
-    
-    socketIoRequestHandler();
-  };
+  // const requestHandler = async () => {
+  //   socket.emit("requestData");
+  // };
 
   useEffect(() => {
     if (plantData) {
@@ -112,8 +113,13 @@ const Dashboard = () => {
     }
   }, [plantData]);
 
+  useEffect(() => {
+    dispatch(treeActions.updateLoader(isLoading));
+  }, [isLoading]);
+
   return (
     <Box>
+      {loader && <Loader />}
       <HeaderBox>
         <Logo src={treeshoplogo} alt="" />
         <TextField
@@ -171,16 +177,10 @@ const Dashboard = () => {
             <PopoverList sx={{ p: 2, cursor: "not-allowed" }}>
               Advanced
             </PopoverList>
-            <PopoverList
-              onClick={requestHandler}
-              sx={{ p: 2, cursor: "pointer" }}
-            >
-              Request
-            </PopoverList>
           </Popover>
         </IconBox>
       </HeaderBox>
-      {isLoading && <Typography>Loading...</Typography>}
+      {/* {isLoading && <Typography>Loading...</Typography>} */}
       <BodyBox>
         {FilteredArray?.map((data, index) => (
           <Card key={data._id} sx={{ maxWidth: 345 }}>
@@ -235,8 +235,14 @@ const Dashboard = () => {
                 </Button>
                 <Button
                   onClick={() => {
+                    dispatch(treeActions.updateLoader(true));
                     const id = ImageData[index]._id;
-                    deletePlant(id);
+                    deletePlant(id, {
+                      onSuccess: async () => {
+                        await refetch();
+                        dispatch(treeActions.updateLoader(false));
+                      },
+                    });
                   }}
                   variant="contained"
                   size="small"

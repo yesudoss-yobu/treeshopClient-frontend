@@ -5,6 +5,7 @@ const initialState = {
   trees: [],
   cart: [],
   testIndex: "",
+  loader: false,
 };
 
 export const treeSlice = createSlice({
@@ -45,6 +46,9 @@ export const treeSlice = createSlice({
 
     storePlant: (state, action) => {
       state.trees = action.payload;
+    },
+    updateLoader: (state, action) => {
+      state.loader = action.payload;
     },
   },
 });
